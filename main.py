@@ -5,9 +5,9 @@ from lxml import html
 
 from cleanname import clean_filename
 
-dir_loc = r'' # define file storing location here
+
 website_url = r'https://www.mangapanda.com'
-manga_url = r'https://www.mangapanda.com/one-piece' 
+
 
 
 def check_url(url):
@@ -94,11 +94,9 @@ def get_page_details(chapter_url):
     return result
 
 
-# if __name__ == '__main__':
-#     from .cleanname import clean_filename
-manga_url = r'https://www.mangapanda.com/one-piece'
-storing_location = r'C:\Users\prashra\Pictures\mangascrapper'
-manga_name = manga_url.split('/')[-1]
+
+manga_url = r'' # give manag link here eg 'https://www.mangapanda.com/one-piece'
+storing_location = r'' # give location for the storing the manga here manga_name = manga_url.split('/')[-1]
 location = os.path.join(storing_location, clean_filename(manga_name))
 chapter_list = get_list_of_chapers(manga_url)[:6]
 
