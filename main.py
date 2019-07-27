@@ -96,7 +96,8 @@ def get_page_details(chapter_url):
 
 
 manga_url = r'' # give manag link here eg 'https://www.mangapanda.com/one-piece'
-storing_location = r'' # give location for the storing the manga here manga_name = manga_url.split('/')[-1]
+storing_location = r'' # give location for the storing the manga here 
+manga_name = manga_url.split('/')[-1]
 location = os.path.join(storing_location, clean_filename(manga_name))
 chapter_list = get_list_of_chapers(manga_url)
 
