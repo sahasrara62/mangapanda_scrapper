@@ -74,8 +74,8 @@ def download_image(image_url):
     return image_file
 
 
-def save_file(image_file, location, filename, img_format):
-    image_loc = os.path.join(location, filename)+img_format
+def save_file(image_file, path):
+    image_loc = path
     with open(image_loc, 'wb') as file:
         file.write(image_file)
     return True if os.path.isfile(image_loc) else False
@@ -106,8 +106,9 @@ if not os.path.exists(location):
     os.makedirs(location)
 
 for chapter in chapter_list:
-    name = r'{} {}'.format(chapter['chapter'], chapter['name'])
-    chapter_path = os.path.join(location, clean_filename(name))
+    name = r'{} {}'.format(chapter['chapter'], chapter['name']).strip()
+    print(name)
+    chapter_path = os.path.join(location,clean_filename(name)) # clean_filename(name))
     print(chapter_path)
     if not os.path.exists(chapter_path):
         os.makedirs(chapter_path)
@@ -117,4 +118,11 @@ for chapter in chapter_list:
         img_format = '.' + src.split('.')[-1]
         print('saving image {} in path {}'.format(name, chapter_path))
         image_data = requests.get(src).content
-        save_file(image_data, chapter_path, name, img_format)
+
+        path = os.path.join(chapter_path.strip(), clean_filename(name)) + img_format
+        if not os.path.isfile(path):
+            open(path, 'a').close()
+            if os.path.isfile(path):
+                print("file created {}".format(path))
+        
+        save_file(image_data, path)
