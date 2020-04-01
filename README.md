@@ -1,10 +1,11 @@
 # mangapanda_scrapper
 download the entire manga series from mangapanda website, given need to provide the storing location and the manga URL like https://www.mangapanda.com/one-piece 
 
-i hve used `xpath` for finding the data element and `requests` to  
+i have used `xpath` for finding the data element and `requests` to  
 communicate/crawl links. 
 
-
+    __author__ = "prashant rana"
+    __email__ = "uchiha.rana62@gmail.com"
 how to use:
 
 1. install the requirements
