@@ -29,7 +29,7 @@ def get_args():
     return final_args
 
 if __name__=='__main__':
-
     import scrapper
     args = get_args()
     scrapper.download_manga(**args)
+
