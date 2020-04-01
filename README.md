@@ -59,8 +59,9 @@ how to use:
      
      eg `python main.py -u https://www.mangapanda.com/one-piece -s 1 -e 10 `
      
-Note:     
-    1. use `-l` to define the saving location path
-    2. use of `-u` is necessary
+Note:
+     
+   1. use `-l` to define the saving location path
+   2. use of `-u` is necessary
     
    
