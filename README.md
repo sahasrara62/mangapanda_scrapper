@@ -63,5 +63,6 @@ Note:
      
    1. use `-l` to define the saving location path
    2. use of `-u` is necessary
-    
-   
+   3. if chapter and range don't run together, if chapter is specified then only 
+      that chapeter will be downloaded not the start or end chapter if mentioned
+      
