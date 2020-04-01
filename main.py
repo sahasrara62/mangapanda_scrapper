@@ -94,27 +94,28 @@ def get_page_details(chapter_url):
     return result
 
 
+if '__name__'=="__main__":
+    manga_url = r'https://www.mangapanda.com/one-piece' # give manag link here eg 'https://www.mangapanda.com/one-piece'
+    storing_location = r'' # give location for the storing the manga here
+    manga_name = manga_url.split('/')[-1]
+    location = os.path.join(storing_location, clean_filename(manga_name))
+    chapter_list = get_list_of_chapers(manga_url)
 
-manga_url = r'' # give manag link here eg 'https://www.mangapanda.com/one-piece'
-storing_location = r'' # give location for the storing the manga here 
-manga_name = manga_url.split('/')[-1]
-location = os.path.join(storing_location, clean_filename(manga_name))
-chapter_list = get_list_of_chapers(manga_url)
+    if not os.path.exists(location):
+        print('creating the folder {}'.format(manga_name))
+        os.makedirs(location)
 
-if not os.path.exists(location):
-    print('creating the folder {}'.format(manga_name))
-    os.makedirs(location)
+    for chapter in chapter_list:
+        name = r'{} {}'.format(chapter['chapter'], chapter['name'])
+        chapter_path = os.path.join(location, clean_filename(name))
+        print(chapter_path)
+        if not os.path.exists(chapter_path):
+            os.makedirs(chapter_path)
+        chapter_details = get_page_details(chapter['url'])
+        for _page in chapter_details:
+            name, src = _page['page_name'], _page['source']
+            img_format = '.' + src.split('.')[-1]
+            print('saving image {} in path {}'.format(name, chapter_path))
+            image_data = requests.get(src).content
+            save_file(image_data, chapter_path, name, img_format)
 
-for chapter in chapter_list:
-    name = r'{} {}'.format(chapter['chapter'], chapter['name'])
-    chapter_path = os.path.join(location, clean_filename(name))
-    print(chapter_path)
-    if not os.path.exists(chapter_path):
-        os.makedirs(chapter_path)
-    chapter_details = get_page_details(chapter['url'])
-    for _page in chapter_details:
-        name, src = _page['page_name'], _page['source']
-        img_format = '.' + src.split('.')[-1]
-        print('saving image {} in path {}'.format(name, chapter_path))
-        image_data = requests.get(src).content
-        save_file(image_data, chapter_path, name, img_format)
