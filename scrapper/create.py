@@ -4,37 +4,39 @@ __email__ = "uchiha.rana62@gmail.com"
 """
 
 import os
+from os import walk
 
 
 class Create:
     def __init__(self, name, location):
-        self.directory_name = name
-        self.location = location
-        self.directory_pwd = None
+        self.base_dir = self.base_manga_directory(name, location)
+        self.pro_dir = self.base_dir
+    def create_directory(self, name, location):
 
-    @property
-    def create_directory(self):
-        self.directory_pwd = os.path.join(self.location, self.directory_name)
+        directory_pwd = os.path.join(location, name)
         try:
-            if not os.path.exists(self.directory_pwd):
+            if not os.path.isdir(directory_pwd):
 
-                os.mkdir(self.directory_pwd)
-                if os.path.isdir(self.directory_pwd):
-                    return 1
+                os.mkdir(directory_pwd)
+                if os.path.isdir(directory_pwd):
+                    return directory_pwd
 
         except FileExistsError:
-            return -1, "directory exists at path"
-        return -1
+            print('file exist')
+        return directory_pwd
 
-    def create_file(self, name, extension, data):
-        try:
-            file_name = "{}.{}".format(name, extension)
-            file = os.path.join(self.directory_pwd, file_name)
-            if os.path.exists(file):
-                print("file exist, overriding")
+    def base_manga_directory(self, name, location):
+        base_directory_pwd = os.path.join(location, name)
+        if not os.path.isdir(base_directory_pwd):
+            os.mkdir(base_directory_pwd)
+            print("base directory created {} ".format(base_directory_pwd))
+        else:
+            print("base directory exist {}".format(base_directory_pwd))
+        return  base_directory_pwd
 
-            with open(file, 'w+') as f:
-                f.write(data)
-        except:
-            return -1
-        return 1
+    def get_all_directories(self):
+        folders = []
+        for (dirpath, dirnames, filenames) in walk(self.base_dir):
+            folders.extend(filenames)
+            break
+        return folders

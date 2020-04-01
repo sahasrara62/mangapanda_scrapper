@@ -3,43 +3,21 @@ __author__ = "prashant rana"
 __email__ = "uchiha.rana62@gmail.com"
 """
 import os
+import sys
 
 import requests
 from lxml import html
 from urllib.parse import urlparse, urljoin
-import tqdm
+from tqdm import tqdm
 import json
 
 
-class Scrap:
-    def __init__(self, url, chapter=None, start=None, end=None, location=None):
-        """
-        Base Scrap class which store the scrapping details
 
+class Download:
+    def __init__(self):
+        pass
 
-        :param url: manga page url example : https://www.mangapanda.com/one-piece
-        :param chapter: chapter_url example : https://www.mangapanda.com/one-piece/1
-        :param start: if a list of chapter to download
-        :param end: end chapter which need to download
-        :param location: location where manga chapter will be saved
-        """
-
-        self.manga_url = url
-        self.chapter = chapter
-        self.start_chapter = start
-        self.end_chapter = end
-        self.location = location  # location if not None else os.path.dirname(os.path.realpath(__file__))
-        self.manga_name = urlparse(self.manga_url)[2].split('/')[1]
-        self.web_url = urlparse(self.manga_url)[0] + '://' + urlparse(self.manga_url)[1]
-
-
-class Download(Scrap):
-    def __init__(self, url):
-        super().__init__(url)
-        if self.location is None:
-            self.location = os.path.dirname(os.path.realpath(__file__))
-
-    def _get_page_urls(self, chapter_url):
+    def get_page_urls(self, chapter_url):
         """
         return the url of the pages present for that chapter 
         
@@ -48,6 +26,7 @@ class Download(Scrap):
         :return: list of urls of the pages for that chapter eg ["https://www.mangapanda.com/one-piece/1".
         "https://www.mangapanda.com/one-piece/1/2" ..]
         """
+        print("downloading chapter {}".format(chapter_url.split('/')[-1]))
         page_content = requests.get(chapter_url).content
         extract_rule = r'//*/div[@id="selectpage"]/select[@id="pageMenu"]'
         tree = html.fromstring(page_content)
@@ -55,50 +34,39 @@ class Download(Scrap):
         chapter_manga_page_links = [urljoin(self.web_url, '{}'.format(i.attrib['value'])) for i in data]
         return chapter_manga_page_links
 
-    def save_manga(self, location, page_image_url, name, extension='jpeg', tqdm=tqdm):
-
+    def save_manga(self, location, page_image_url, name, extension='jpg'):
         """
-        save the chapter page images
 
-        :param location: image file to store
-        :param page_image_url: manga chapter page image url
-        :param name: name of that chapter page
-        :param extension: image format extension
+        :param location:
+        :param page_image_url:
+        :param name:
+        :param extension:
+        :param tqdm:
         :return:
         """
-        # Streaming, so we can iterate over the response.
+
+        file_name = os.path.join(location, name+'.{}'.format(extension))
+
+
+        chunk_size = 1024
         r = requests.get(page_image_url, stream=True)
-        # Total size in bytes.
-        total_size = int(r.headers.get('content-length', 0))
-        block_size = 1024  # 1 Kibibyte
-        t = self.tqdm(total=total_size, unit='iB', unit_scale=True)
+        with open(file_name, 'wb') as f:
+            pbar = tqdm(unit="B", total=int(r.headers['Content-Length']))
+            for chunk in r.iter_content(chunk_size=chunk_size):
+                if chunk:  # filter out keep-alive new chunks
+                    pbar.update(len(chunk))
+                    f.write(chunk)
+        return file_name
 
-        ext = '.{}'.format(extension)
-        manga_chapter_page = os.path.join(location, name, extension)
-
-        if r.status_code == 200:
-            try:
-                with open(manga_chapter_page, 'wb') as page:
-                    for data in r.iter_content(block_size):
-                        t.update(len(data))
-                        page.write(data)
-                t.close()
-            except OSError:
-                print("unable to save")
-
-        if total_size != 0 and t.n != total_size:
-            print("ERROR, something went wrong")
-        return 1
-
-    def _save_details(self, data, location, ):
-        with open(os.path.join(location, '.chapter_logs'), 'w+') as f:
-            print(data)
+    def save_details(self, data, location, ):
+        with open(os.path.join(location, 'info.json'), 'w+') as f:
             f.write(json.dumps(data))
-
-    def dowload_manga(self, urls, location, extension='jpeg'):
+        print("save details at location {}".format(location))
+    def dowload_manga(self, urls, location, extension='jpg'):
 
         """
 
+        :param extension:
         :param urls: list of all page urls
         :param location: where the chapter need to be saved
         :return: None
@@ -111,30 +79,101 @@ class Download(Scrap):
             path = r'//*/img[@id="img"]'
             tree = html.fromstring(res)
             result = tree.xpath(path)
+            print("downloading page {}".format(page_url.split('/')[-1]))
+
             dic['page_name'], dic['image_source'] = result[0].attrib['alt'], result[0].attrib['src']
+            print("downloading image {}".format(dic['image_source']))
             self.save_manga(location, dic['image_source'], dic['page_name'], extension=extension)
-            data.update(dic)
 
-        self._save_details(location, data)
-        return 1
+            data.update({index+1:dic})
+        self.save_details(data, location)
+        return data
 
-    def get_chapters_details(self):
+    def get_chapters_details(self, manga_web_url, manga_name):
 
-        response = requests.get(self.manga_url).content
+        """
+
+        :return:  chapter details from the manga main page in the mangapanda.oom
+        """
+        address = urljoin(manga_web_url, manga_name)
+        response = requests.get(address).content
         tree = html.fromstring(response)
         path = r'//*/div[@id="chapterlist"]/table[@id="listing"]/tr/td/a'
         res = tree.xpath(path)
-        dic = {'chapter': '', 'url': ''}
+        dic = {'chapter_name': '', 'url': ''}
         result = {}
         for chapter_number, chapter_details in enumerate(res):
             dic['chapter_name'] = "{} {}".format(chapter_details.text, chapter_details.tail)
-            dic['url'] = self.manga_url + chapter_details.attrib['href']
+            dic['url'] = manga_web_url + chapter_details.attrib['href']
             # dic['name'] = chapter_details.tail
-            result.update({str(chapter_number + 1): dic})
-            dic = {'chapter': '', 'url': ''}
-        self._save_details( result, self.location)
+            result.update({chapter_number + 1: dic})
+            dic = {'chapter_name': '', 'url': ''}
+        # self._save_details( result, self.location)
         return result
 
 
 
 
+
+class Scrap(Download):
+    def __init__(self, url, chapter=None, start=None, end=None, location=None):
+        """
+        Base Scrap class which store the scrapping details
+
+
+        :param url: manga page url example : https://www.mangapanda.com/one-piece
+        :param chapter: chapter_url example : https://www.mangapanda.com/one-piece/1 # dont include extra / at end
+        :param start: if a list of chapter to download
+        :param end: end chapter which need to download
+        :param location: location where manga chapter will be saved
+        """
+
+        super().__init__()
+        self.manga_url = url
+        self.chapter = chapter
+
+        self.location = self._get_location(location)
+        self.manga_name = urlparse(self.manga_url)[2].split('/')[1]
+        self.web_url = urlparse(self.manga_url)[0] + '://' + urlparse(self.manga_url)[1]
+        self.details = self.get_chapters_details(self.web_url, self.manga_name)
+        self.start_chapter = 0
+        self.end_chapter = 99999999
+        self.set_chapter_start_end(chapter, start, end)
+
+    def _get_location(self, location):
+            if location is not None:
+                return location
+            return os.path.dirname(os.path.realpath(__file__))
+    def _get_start(self, start):
+        if start is None:
+            start = 0
+
+        info =self.details
+        new_start = -1
+        if  isinstance(start, int) and start<=len(self.details) and start>=1:
+            if start in info.keys():
+                new_start = start
+        else:
+            print("invalid start chapter, starting form1")
+            new_start = min(info.keys())
+        return int(new_start)
+
+
+    def _get_end(self, end):
+        if end is None:
+            end = 9999999
+        end_ = 0
+        if isinstance(end, int) and end<=len(self.details.keys()) and end>=1:
+            if end in self.details.keys():
+                end_ = end
+        else:
+            end_ = min(self.details.keys())
+        return int(end_)
+
+    def set_chapter_start_end(self, chapter, start, end):
+        if self.chapter is not None:
+            self.start_chapter = chapter.split('/')[-1]
+            self.end_chapter = chapter.split('/')[-1]
+        else:
+            self.start_chapter = self._get_start(start)
+            self.end_chapter  = self._get_end(end)
