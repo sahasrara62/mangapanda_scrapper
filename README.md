@@ -66,3 +66,7 @@ Note:
    3. if chapter and range don't run together, if chapter is specified then only 
       that chapeter will be downloaded not the start or end chapter if mentioned
       
+ToDo in future:
+
+1. keep the history of downloaded data in the apllication so if the application is stopped in beetween , user able to start download from that point not for the begining.
+2. Desktop application (electron js or qt )
