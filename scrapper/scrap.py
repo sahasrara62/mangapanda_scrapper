@@ -145,8 +145,10 @@ class Scrap(Download):
                 return location
             return os.path.dirname(os.path.realpath(__file__))
     def _get_start(self, start):
+        if start is not None:
+            return int(start)
         if start is None:
-            start = 0
+            start = 1
 
         info =self.details
         new_start = -1
@@ -160,6 +162,8 @@ class Scrap(Download):
 
 
     def _get_end(self, end):
+        if end is not None:
+            return int(end)
         if end is None:
             end = 9999999
         end_ = 0
@@ -167,7 +171,7 @@ class Scrap(Download):
             if end in self.details.keys():
                 end_ = end
         else:
-            end_ = min(self.details.keys())
+            end_ = max(self.details.keys())
         return int(end_)
 
     def set_chapter_start_end(self, chapter, start, end):
