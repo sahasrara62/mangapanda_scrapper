@@ -1,5 +1,5 @@
 # mangapanda_scrapper
-download the entire manga series from [mangapanda](http://www.mangapanda.com] and [mangareader](http://www.mangareader.net) website, given need to provide the storing location and the manga URL like https://www.mangapanda.com/one-piece 
+download the entire manga series from [mangapanda](http://www.mangapanda.com) and [mangareader](http://www.mangareader.net) website, given need to provide the storing location and the manga URL like https://www.mangapanda.com/one-piece 
 
  
 
