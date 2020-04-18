@@ -2,3 +2,4 @@ validators
 requests
 urllib3
 lxml
+tqdm

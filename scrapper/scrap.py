@@ -10,7 +10,26 @@ from lxml import html
 from urllib.parse import urlparse, urljoin
 from tqdm import tqdm
 import json
+from pathlib import Path, PureWindowsPath
+from .create import clean_filename
+import multiprocessing
 
+import multiprocessing.pool
+import functools
+
+def timeout(max_timeout):
+    """Timeout decorator, parameter in seconds."""
+    def timeout_decorator(item):
+        """Wrap the original function."""
+        @functools.wraps(item)
+        def func_wrapper(*args, **kwargs):
+            """Closure for function."""
+            pool = multiprocessing.pool.ThreadPool(processes=1)
+            async_result = pool.apply_async(item, args, kwargs)
+            # raises a TimeoutError if execution exceeds max_timeout
+            return async_result.get(max_timeout)
+        return func_wrapper
+    return timeout_decorator
 
 
 class Download:
@@ -19,9 +38,9 @@ class Download:
 
     def get_page_urls(self, chapter_url):
         """
-        return the url of the pages present for that chapter 
-        
-        
+        return the url of the pages present for that chapter
+
+
         :param chapter_url:url of the chapter eg : "https://www.mangapanda.com/one-piece/1"
         :return: list of urls of the pages for that chapter eg ["https://www.mangapanda.com/one-piece/1".
         "https://www.mangapanda.com/one-piece/1/2" ..]
@@ -45,23 +64,42 @@ class Download:
         :return:
         """
 
-        file_name = os.path.join(location, name+'.{}'.format(extension))
+        name = clean_filename(name).strip()
+        print(name)
+        file_name = os.path.join(location, name +'.{}'.format(extension))
 
+        if os.name =='nt':
+            # handling downloading for windows file system
+            file_name = Path(file_name)
+            file_name = PureWindowsPath(file_name).as_posix()
 
         chunk_size = 1024
-        r = requests.get(page_image_url, stream=True)
+        wait = True
+
+
+        r = requests.get(page_image_url, stream=True, timeout=30)
+
+
         with open(file_name, 'wb') as f:
             pbar = tqdm(unit="B", total=int(r.headers['Content-Length']))
             for chunk in r.iter_content(chunk_size=chunk_size):
                 if chunk:  # filter out keep-alive new chunks
                     pbar.update(len(chunk))
                     f.write(chunk)
-        return file_name
-
+        if os.path.isfile(file_name):
+            return True
+        return False
     def save_details(self, data, location, ):
+
+        if os.name=='nt':
+            # handling windows path
+            location = Path(location)
+            location = PureWindowsPath(location).as_posix().strip()
+
         with open(os.path.join(location, 'info.json'), 'w+') as f:
             f.write(json.dumps(data))
         print("save details at location {}".format(location))
+
     def dowload_manga(self, urls, location, extension='jpg'):
 
         """
@@ -74,16 +112,28 @@ class Download:
         data = {}
 
         for index, page_url in enumerate(urls):
+            wait = True
             dic = {'page_name': '', 'image_source': ''}
-            res = requests.get(page_url).content
-            path = r'//*/img[@id="img"]'
-            tree = html.fromstring(res)
-            result = tree.xpath(path)
-            print("downloading page {}".format(page_url.split('/')[-1]))
 
-            dic['page_name'], dic['image_source'] = result[0].attrib['alt'], result[0].attrib['src']
-            print("downloading image {}".format(dic['image_source']))
-            self.save_manga(location, dic['image_source'], dic['page_name'], extension=extension)
+            while wait:
+                try:
+                    res = requests.get(page_url).content
+                    path = r'//*/img[@id="img"]'
+                    tree = html.fromstring(res)
+                    result = tree.xpath(path)
+                    print("downloading page {}".format(page_url.split('/')[-1]))
+
+                    dic['page_name'], dic['image_source'] = result[0].attrib['alt'], result[0].attrib['src']
+                    print("downloading image {}".format(dic['image_source']))
+
+                    x = self.save_manga(location, dic['image_source'], dic['page_name'], extension=extension)
+
+                    if x:
+                        wait = False
+                except  :
+                        wait = True
+                        print("Timeout : Redownloading again")
+
 
             data.update({index+1:dic})
         self.save_details(data, location)
@@ -141,9 +191,16 @@ class Scrap(Download):
         self.set_chapter_start_end(chapter, start, end)
 
     def _get_location(self, location):
+
+
             if location is not None:
+                if os.name =="nt":
+                    location = Path(location)
+                    location = PureWindowsPath(location).as_posix()
+
                 return location
             return os.path.dirname(os.path.realpath(__file__))
+
     def _get_start(self, start):
         if start is not None:
             return int(start)
