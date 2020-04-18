@@ -37,15 +37,6 @@ def timeout(max_timeout):
     return timeout_decorator
 
 
-def save_details(data, location, ):
-    if os.name == 'nt':
-        # handling windows path
-        location = Path(location)
-        location = PureWindowsPath(location).as_posix().strip()
-
-    with open(os.path.join(location, 'info.json'), 'w+') as f:
-        f.write(json.dumps(data))
-    print("save details at location {}".format(location))
 
 
 class Download:
@@ -104,6 +95,11 @@ class Download:
             return True
         return False
 
+    def save_details(self, data, location, ):
+        with open(os.path.join(location, 'info.json'), 'w+') as f:
+            f.write(json.dumps(data))
+        print("save details at location {}".format(location))
+
     def download_manga(self, urls, location, extension='jpg'):
 
         """
@@ -139,7 +135,7 @@ class Download:
                     print("Timeout : Redownloading again")
 
             data.update({index + 1: dic})
-        save_details(data, location)
+        self.save_details(data, location)
         return data
 
     def get_chapters_details(self, manga_web_url, manga_name):
