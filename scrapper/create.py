@@ -7,7 +7,6 @@ import os
 from os import walk
 from pathlib import Path, PureWindowsPath
 
-
 import unicodedata
 import string
 
@@ -31,13 +30,12 @@ def clean_filename(filename, whitelist=valid_filename_chars, replace='_'):
     return cleaned_filename[:char_limit]
 
 
-
 class Create:
     def __init__(self, name, location):
 
-
         self.base_dir = self.base_manga_directory(name, location)
         self.pro_dir = self.base_dir
+
     def create_directory(self, name, location):
 
         name = clean_filename(name).strip()
@@ -47,7 +45,6 @@ class Create:
             print("this is a window system")
             directory_pwd = Path(directory_pwd)
             directory_pwd = PureWindowsPath(directory_pwd).as_posix()
-
 
         try:
             if not os.path.isdir(directory_pwd):
@@ -61,20 +58,18 @@ class Create:
 
     def base_manga_directory(self, name, location):
 
-
         name = clean_filename(name).strip()
         base_directory_pwd = os.path.join(location, name)
         if os.name == 'nt':
             _base_directory_pwd = Path(base_directory_pwd)
             base_directory_pwd = PureWindowsPath(_base_directory_pwd).as_posix()
 
-
         if not os.path.isdir(base_directory_pwd):
             os.mkdir(base_directory_pwd)
             print("base directory created {} ".format(base_directory_pwd))
         else:
             print("base directory exist {}".format(base_directory_pwd))
-        return  base_directory_pwd
+        return base_directory_pwd
 
     def get_all_directories(self):
         folders = []

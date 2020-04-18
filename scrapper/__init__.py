@@ -4,6 +4,7 @@ __email__ = "uchiha.rana62@gmail.com"
 
 This is scrapper module which do all the work of scrapping, maintaining data and storing the information.
 """
+
 from .scrap import Download, Scrap
 from .create import Create
 
@@ -25,9 +26,9 @@ class MangaDownload:
             name, link = manga_details[data]['chapter_name'], manga_details[data]['url']
             print(name, link)
             chapter_page_link = scrapper.get_page_urls(link)
-            dir = file_creator.create_directory(name, manga_path)
+            folder = file_creator.create_directory(name, manga_path)
 
-            scrapper.dowload_manga(chapter_page_link, dir)
+            scrapper.download_manga(chapter_page_link, folder)
 
 
 download_manga = MangaDownload.download_manga

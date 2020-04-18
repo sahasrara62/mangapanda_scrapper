@@ -17,10 +17,13 @@ import multiprocessing
 import multiprocessing.pool
 import functools
 
+
 def timeout(max_timeout):
     """Timeout decorator, parameter in seconds."""
+
     def timeout_decorator(item):
         """Wrap the original function."""
+
         @functools.wraps(item)
         def func_wrapper(*args, **kwargs):
             """Closure for function."""
@@ -28,8 +31,21 @@ def timeout(max_timeout):
             async_result = pool.apply_async(item, args, kwargs)
             # raises a TimeoutError if execution exceeds max_timeout
             return async_result.get(max_timeout)
+
         return func_wrapper
+
     return timeout_decorator
+
+
+def save_details(data, location, ):
+    if os.name == 'nt':
+        # handling windows path
+        location = Path(location)
+        location = PureWindowsPath(location).as_posix().strip()
+
+    with open(os.path.join(location, 'info.json'), 'w+') as f:
+        f.write(json.dumps(data))
+    print("save details at location {}".format(location))
 
 
 class Download:
@@ -66,9 +82,9 @@ class Download:
 
         name = clean_filename(name).strip()
         print(name)
-        file_name = os.path.join(location, name +'.{}'.format(extension))
+        file_name = os.path.join(location, name + '.{}'.format(extension))
 
-        if os.name =='nt':
+        if os.name == 'nt':
             # handling downloading for windows file system
             file_name = Path(file_name)
             file_name = PureWindowsPath(file_name).as_posix()
@@ -76,9 +92,7 @@ class Download:
         chunk_size = 1024
         wait = True
 
-
         r = requests.get(page_image_url, stream=True, timeout=30)
-
 
         with open(file_name, 'wb') as f:
             pbar = tqdm(unit="B", total=int(r.headers['Content-Length']))
@@ -89,18 +103,8 @@ class Download:
         if os.path.isfile(file_name):
             return True
         return False
-    def save_details(self, data, location, ):
 
-        if os.name=='nt':
-            # handling windows path
-            location = Path(location)
-            location = PureWindowsPath(location).as_posix().strip()
-
-        with open(os.path.join(location, 'info.json'), 'w+') as f:
-            f.write(json.dumps(data))
-        print("save details at location {}".format(location))
-
-    def dowload_manga(self, urls, location, extension='jpg'):
+    def download_manga(self, urls, location, extension='jpg'):
 
         """
 
@@ -130,13 +134,12 @@ class Download:
 
                     if x:
                         wait = False
-                except  :
-                        wait = True
-                        print("Timeout : Redownloading again")
+                except:
+                    wait = True
+                    print("Timeout : Redownloading again")
 
-
-            data.update({index+1:dic})
-        self.save_details(data, location)
+            data.update({index + 1: dic})
+        save_details(data, location)
         return data
 
     def get_chapters_details(self, manga_web_url, manga_name):
@@ -160,9 +163,6 @@ class Download:
             dic = {'chapter_name': '', 'url': ''}
         # self._save_details( result, self.location)
         return result
-
-
-
 
 
 class Scrap(Download):
@@ -192,14 +192,16 @@ class Scrap(Download):
 
     def _get_location(self, location):
 
-
-            if location is not None:
-                if os.name =="nt":
-                    location = Path(location)
-                    location = PureWindowsPath(location).as_posix()
-
+        if location is not None:
+            if os.name == "nt":
+                location = Path(location)
+                location = PureWindowsPath(location).as_posix()
+            if os.path.exists(location):
                 return location
-            return os.path.dirname(os.path.realpath(__file__))
+            else:
+                os.mkdir(location)
+                return location
+        return os.path.dirname(os.path.realpath(__file__))
 
     def _get_start(self, start):
         if start is not None:
@@ -207,9 +209,9 @@ class Scrap(Download):
         if start is None:
             start = 1
 
-        info =self.details
+        info = self.details
         new_start = -1
-        if  isinstance(start, int) and start<=len(self.details) and start>=1:
+        if isinstance(start, int) and start <= len(self.details) and start >= 1:
             if start in info.keys():
                 new_start = start
         else:
@@ -217,14 +219,13 @@ class Scrap(Download):
             new_start = min(info.keys())
         return int(new_start)
 
-
     def _get_end(self, end):
         if end is not None:
             return int(end)
         if end is None:
             end = 9999999
         end_ = 0
-        if isinstance(end, int) and end<=len(self.details.keys()) and end>=1:
+        if isinstance(end, int) and end <= len(self.details.keys()) and end >= 1:
             if end in self.details.keys():
                 end_ = end
         else:
@@ -237,4 +238,4 @@ class Scrap(Download):
             self.end_chapter = chapter.split('/')[-1]
         else:
             self.start_chapter = self._get_start(start)
-            self.end_chapter  = self._get_end(end)
+            self.end_chapter = self._get_end(end)
