@@ -60,6 +60,7 @@ class Download:
         chapter_manga_page_links = [urljoin(self.web_url, '{}'.format(i.attrib['value'])) for i in data]
         return chapter_manga_page_links
 
+
     def save_manga(self, location, page_image_url, name, extension='jpg'):
         """
 
@@ -207,7 +208,7 @@ class Scrap(Download):
 
         info = self.details
         new_start = -1
-        if isinstance(start, int) and start <= len(self.details) and start >= 1:
+        if isinstance(start, int) and len(self.details) >= start >= 1:
             if start in info.keys():
                 new_start = start
         else:
@@ -221,7 +222,7 @@ class Scrap(Download):
         if end is None:
             end = 9999999
         end_ = 0
-        if isinstance(end, int) and end <= len(self.details.keys()) and end >= 1:
+        if isinstance(end, int) and len(self.details.keys()) >= end >= 1:
             if end in self.details.keys():
                 end_ = end
         else:
