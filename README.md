@@ -67,3 +67,7 @@ ToDo in future:
 
 1. keep the history of downloaded data in the apllication so if the application is stopped in beetween , user able to start download from that point not for the begining.
 2. Desktop application (electron js or qt )
+
+## Note
+
+    Mangapanda.com and mandareader.net is down now (20-01-2021) so this repo code won't work till they come online.
